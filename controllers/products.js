@@ -1,5 +1,7 @@
 const bcrypt = require('bcryptjs');
-const Vas = require('../models/volunteers'); // Import the Vas model from the product file
+const jwt = require('jsonwebtoken');
+const Vas = require('../models/volunteers'); 
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 
 /**
  * Controller function to handle volunteer signup.
@@ -56,32 +58,25 @@ const signupVolunteer = async (req, res) => {
  */
 const loginVolunteer = async (req, res) => {
   try {
-    // Destructure the necessary fields from the request body
     const { emailId, password } = req.body;
 
-    // Check if a user with the provided email exists in the database
     const existingUser = await Vas.findOne({ emailId });
-    console.log(existingUser.password);
     if (!existingUser) {
-      // If user does not exist, respond with a 404 status and a message
       return res.status(404).json({ msg: 'User does not exist' });
-    } else {
-      // Compare the provided password with the stored plain text password
-      const isMatch = await bcrypt.compare(password, existingUser.password);
-      console.log(isMatch);
-      if (!isMatch) {
-        // If password does not match, respond with a 400 status and a message
-        return res.status(400).json({ msg: 'Invalid credentials' });
-      } else {
-        res.status(200).json({
-          msg: 'User logged in successfully',
-          user: existingUser
-        });
-      }
     }
-    
+
+    const isMatch = await bcrypt.compare(password, existingUser.password);
+    if (!isMatch) {
+      return res.status(400).json({ msg: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign({ userId: existingUser._id }, JWT_SECRET, { expiresIn: '1h' });
+
+    res.status(200).json({
+      msg: 'User logged in successfully',
+      token
+    });
   } catch (error) {
-    // Log the error to the console for debugging purposes
     console.error('Error logging in user:', error.message);
     res.status(500).json({ msg: 'Error logging in user', error: error.message });
   }
