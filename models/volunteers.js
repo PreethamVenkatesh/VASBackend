@@ -1,3 +1,4 @@
+const bcrypt = require('bcryptjs'); 
 const mongoose = require('mongoose'); // Import the mongoose library
 
 // Define the schema for the VAS collection

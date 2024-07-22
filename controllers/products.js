@@ -1,4 +1,7 @@
-const Vas = require('../models/volunteers'); // Import the Vas model from the product file
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const Vas = require('../models/volunteers'); 
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 
 /**
  * Controller function to handle volunteer signup.
@@ -19,6 +22,8 @@ const signupVolunteer = async (req, res) => {
       return res.status(400).json({ msg: 'User with this email already exists' });
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     // Create a new user instance with the provided details
     const newUser = new Vas({
       firstName,
@@ -26,7 +31,7 @@ const signupVolunteer = async (req, res) => {
       emailId,
       vehicleNumber,
       brpNumber,
-      password
+      password: hashedPassword 
     });
 
     // Save the new user to the database
@@ -39,9 +44,43 @@ const signupVolunteer = async (req, res) => {
     });
   } catch (error) {
     // Log the error to the console for debugging purposes
-    console.error('Error creating user:', error);
-    res.status(500).json({ msg: 'Error creating user', error });
+    console.error('Error creating user:', error.message);
+    res.status(500).json({ msg: 'Error creating user', error: error.message });
   }
 };
 
-module.exports = { signupVolunteer }; // Export the signupVolunteer function for use in routes
+/**
+ * Controller function to handle volunteer login.
+ * This function checks the email and password for an existing volunteer user.
+ * 
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
+const loginVolunteer = async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+
+    const existingUser = await Vas.findOne({ emailId });
+    if (!existingUser) {
+      return res.status(404).json({ msg: 'User does not exist' });
+    }
+
+    const isMatch = await bcrypt.compare(password, existingUser.password);
+    if (!isMatch) {
+      return res.status(400).json({ msg: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign({ userId: existingUser._id }, JWT_SECRET, { expiresIn: '1h' });
+
+    res.status(200).json({
+      msg: 'User logged in successfully',
+      token
+    });
+  } catch (error) {
+    console.error('Error logging in user:', error.message);
+    res.status(500).json({ msg: 'Error logging in user', error: error.message });
+  }
+};
+
+// Export the signupVolunteer and loginVolunteer functions
+module.exports = { signupVolunteer, loginVolunteer };
