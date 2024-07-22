@@ -1,17 +1,47 @@
 require('dotenv').config();           // Load environment variables from a .env file into process.env
 const express = require('express');   // Import the express library
 const cors = require('cors');         // Import the CORS library to handle cross-origin requests
+const connectDB = require('./db/connect'); // Import the connectDB function from the db/connect module
+const productsRoutes = require('./routes/products'); // Import the productsRoutes from the routes/products module
+const Customer = require('./models/Customer');
+
 const app = express();                // Create a new express application
-const connectDB = require('./db/connect');              // Import the connectDB function from the db/connect module
-const productsRoutes = require('./routes/products');    // Import the productsRoutes from the routes/products module
+
 // Set the port for the server to listen on
-const PORT = process.env.PORT || 8888;          
+const PORT = process.env.PORT || 8888;
+
 // Middleware to parse JSON bodies of incoming requests
 app.use(express.json());
+
 // Middleware to enable CORS (Cross-Origin Resource Sharing) for all routes
-app.use(cors());
+const corsOption = {
+  origin: ["http://localhost:3000"],
+  // origin: ["https://my-json-server.typicode.com/santoshlearner07/users_api"],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+};
+app.use(cors(corsOption));
+
 
 app.use('/api', productsRoutes);
+
+app.post("/users", async (req, res) => {
+  try {
+    // console.log(req.body)
+    const user = await Customer.create(req.body);
+    // console.log(user)
+    res.status(200).json(user);
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.post("/test", (req, res) => {
+  console.log(req.body);
+  res.send(req.body);
+});
+
 
 const start = async () => {
   try {
@@ -26,5 +56,6 @@ const start = async () => {
     console.error('Error starting server:', error);
   }
 };
+
 // Call the start function to initialize the database connection and start the server
 start();
