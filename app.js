@@ -4,7 +4,7 @@ const cors = require('cors');         // Import the CORS library to handle cross
 const connectDB = require('./db/connect'); // Import the connectDB function from the db/connect module
 const productsRoutes = require('./routes/products'); // Import the productsRoutes from the routes/products module
 const Customer = require('./models/Customer');
-
+const path = require('path');         // Import the path module to handle file paths
 const app = express();                // Create a new express application
 
 // Set the port for the server to listen on
@@ -12,6 +12,8 @@ const PORT = process.env.PORT || 8888;
 
 // Middleware to parse JSON bodies of incoming requests
 app.use(express.json());
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Middleware to enable CORS (Cross-Origin Resource Sharing) for all routes
 const corsOption = {
