@@ -28,6 +28,9 @@ const vasSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  profilePicture: {
+    type: String, 
+  },
   volunteer: {
     type: Boolean,
     default: true
