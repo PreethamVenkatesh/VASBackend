@@ -1,4 +1,7 @@
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const Cust = require('../models/Customer'); // Import the Customer model
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 
 /**
  * Controller function to handle customer signup.
@@ -9,10 +12,6 @@ const Cust = require('../models/Customer'); // Import the Customer model
  */
 const customerSignUp = async (req, res) => {
   try {
-    // Log the request headers and body
-    console.log('Request Headers:', req.headers);
-    console.log('Request Body:', req.body);
-
     // Destructure the necessary fields from the request body
     const { firstName, lastName, emailId, phoneNumber, password } = req.body;
 
@@ -27,13 +26,18 @@ const customerSignUp = async (req, res) => {
       // If user exists, respond with a 400 status and a message
       return res.status(400).json({ msg: 'User with this email already exists' });
     }
+    console.log('Original Password:', password);
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    console.log('Hashed Password:', hashedPassword);
 
     const custUser = new Cust({
       firstName,
       lastName,
       emailId,
       phoneNumber,
-      password
+      password: hashedPassword
     });
 
     // Save the new user to the database
@@ -51,4 +55,61 @@ const customerSignUp = async (req, res) => {
   }
 };
 
-module.exports = { customerSignUp };
+/**
+ * Controller function to handle customer login.
+ * This function checks the email and password for an existing customer user.
+ * 
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
+const customerLogin = async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+
+    // Check if the user exists in the database
+    const existingUser = await Cust.findOne({ emailId });
+    if (!existingUser) {
+      return res.status(404).json({ msg: 'User does not exist' });
+    }
+
+    // Check if the password matches
+    // const isMatch = await bcrypt.compare(password, existingUser.password);
+    if (password !== existingUser.password) {
+      return res.status(400).json({ msg: 'Invalid credentials' });
+    }
+
+    // Generate a JWT token
+    const token = jwt.sign({ userId: existingUser._id }, JWT_SECRET, { expiresIn: '1h' });
+
+    res.status(200).json({
+      msg: 'User logged in successfully',
+      token
+    });
+  } catch (error) {
+    console.error('Error logging in user:', error.message);
+    res.status(500).json({ msg: 'Error logging in user', error: error.message });
+  }
+};
+
+/**
+ * Controller function to handle fetching customer details.
+ * This function retrieves the details of the authenticated customer user.
+ * 
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
+const getCustomerDetails = async (req, res) => {
+  try {
+    const userId = req.user;
+    const user = await Cust.findById(userId).select('-password');
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+    res.status(200).json(user);
+  } catch (error) {
+    console.error('Error fetching user details:', error.message);
+    res.status(500).json({ msg: 'Error fetching user details', error: error.message });
+  }
+};
+
+module.exports = { customerSignUp, customerLogin, getCustomerDetails };

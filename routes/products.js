@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const { signupVolunteer, loginVolunteer, getUserDetails } = require('../controllers/products');
-const { customerSignUp } = require('../controllers/custregister');
 const auth = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
@@ -9,13 +8,16 @@ const fs = require('fs');
 const Vas = require('../models/volunteers');
 const sharp = require('sharp');
 
-// POST route defined for the '/signup' endpoint, which uses the signupVolunteer function as its handler
+// POST route for signup
 router.post('/signup', signupVolunteer);
-router.post('/custregister', customerSignUp);
 
-// POST route defined for the '/login' endpoint, which uses the loginVolunteer function as its handler
+// POST route for login
 router.post('/login', loginVolunteer);
 
+// GET route for user details
+router.get('/user', auth, getUserDetails);
+
+// GET route for protected resource
 router.get('/protected', auth, (req, res) => {
     res.json({ msg: 'This is a protected route' });
 });
@@ -69,5 +71,4 @@ router.post('/upload-profile-picture', auth, upload.single('profilePicture'), as
     }
 });
 
-// Export the router object so it can be used in other parts of the application
 module.exports = router;

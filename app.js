@@ -6,6 +6,7 @@ const productsRoutes = require('./routes/products'); // Import the productsRoute
 const Customer = require('./models/Customer');
 const path = require('path');         // Import the path module to handle file paths
 const app = express();                // Create a new express application
+const customerRoutes = require('./routes/Customer');
 
 // Set the port for the server to listen on
 const PORT = process.env.PORT || 8888;
@@ -26,6 +27,7 @@ app.use(cors(corsOption));
 
 
 app.use('/api', productsRoutes);
+app.use('/api', customerRoutes);
 
 app.post("/users", async (req, res) => {
   try {
