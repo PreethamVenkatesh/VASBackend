@@ -25,7 +25,6 @@ const corsOption = {
 };
 app.use(cors(corsOption));
 
-
 app.use('/api', productsRoutes);
 app.use('/api', customerRoutes);
 

@@ -79,8 +79,8 @@ const customerLogin = async (req, res) => {
     }
 
     // Generate a JWT token
-    const token = jwt.sign({ userId: existingUser._id }, JWT_SECRET, { expiresIn: '1h' });
-
+    const token = jwt.sign({ userId: existingUser._id,emailId:existingUser.emailId}, JWT_SECRET, { expiresIn: '1h' });
+    console.log(token)
     res.status(200).json({
       msg: 'User logged in successfully',
       token
@@ -98,12 +98,15 @@ const customerLogin = async (req, res) => {
  * @param {Object} req - The request object
  * @param {Object} res - The response object
  */
-const getCustomerDetails = async (req, res) => {
+
+const getUserDetails = async (req, res) => {
+  const {emailId} = req.query;
+  console.log(emailId)
   try {
-    const userId = req.user;
-    const user = await Cust.findById(userId).select('-password');
+    const user = await Cust.findOne({emailId});
+    console.log(user)
     if (!user) {
-      return res.status(404).json({ msg: 'User not found' });
+        res.status(404).json({ msg: 'User not found' });
     }
     res.status(200).json(user);
   } catch (error) {
@@ -112,4 +115,4 @@ const getCustomerDetails = async (req, res) => {
   }
 };
 
-module.exports = { customerSignUp, customerLogin, getCustomerDetails };
+module.exports = { customerSignUp, customerLogin, getUserDetails };
