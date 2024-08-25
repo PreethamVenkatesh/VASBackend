@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const Cust = require('../models/Customer'); // Import the Customer model
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 
+
 /**
  * Controller function to handle customer signup.
  * This function creates a new customer user if the email does not already exist.
@@ -115,4 +116,26 @@ const getUserDetails = async (req, res) => {
   }
 };
 
-module.exports = { customerSignUp, customerLogin, getUserDetails };
+const updateUser = async (req, res) => {
+  const { emailId } = req.body;  // use req.body to fetch emailId and updated data from request body
+  const { firstName, lastName, phoneNumber } = req.body;
+
+  try {
+    const updatedUser = await Cust.findOneAndUpdate(
+      { emailId }, // Find the document by emailId
+      { firstName, lastName, phoneNumber }, // Update the specified fields
+      { new: true, runValidators: true } // Options: return the updated document and run validators
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+module.exports = { customerSignUp, customerLogin, getUserDetails,updateUser };

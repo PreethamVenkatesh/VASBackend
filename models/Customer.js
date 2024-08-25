@@ -25,6 +25,16 @@ const custSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  homeAddress: {
+    type: String
+  },
+  workAddress: {
+    type: String
+  },
+  image: {
+    data: Buffer,
+    contentType: String 
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -33,4 +43,3 @@ const custSchema = new mongoose.Schema({
 const Customer = mongoose.model('Customer', custSchema)
 
 module.exports = Customer;
-
