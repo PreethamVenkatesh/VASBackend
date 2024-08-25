@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { signupVolunteer, loginVolunteer, getUserDetails } = require('../controllers/products');
+const { signupVolunteer, loginVolunteer, getUserDetails, updateUserProfile } = require('../controllers/products');
 const auth = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
@@ -16,6 +16,8 @@ router.post('/login', loginVolunteer);
 
 // GET route for user details
 router.get('/user', auth, getUserDetails);
+
+router.put('/update-profile', auth, updateUserProfile);
 
 // GET route for protected resource
 router.get('/protected', auth, (req, res) => {

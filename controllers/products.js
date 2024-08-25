@@ -96,4 +96,34 @@ const getUserDetails = async (req, res) => {
   }
 };
 
-module.exports = { signupVolunteer, loginVolunteer, getUserDetails };
+const updateUserProfile = async (req, res) => {
+  try {
+    const userId = req.user;
+    const { firstName, lastName, emailId} = req.body;
+
+    const user = await Vas.findById(userId);
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    if (emailId && emailId !== user.emailId) {
+      const existingUser = await Vas.findOne({ emailId: emailId });
+      if (existingUser) {
+        return res.status(400).json({ msg: 'Email is already in use' });
+      }
+      user.emailId = emailId;
+    }
+
+    user.firstName = firstName || user.firstName;
+    user.lastName = lastName || user.lastName;
+
+    await user.save();
+
+    res.status(200).json({ msg: 'Profile updated successfully', user });
+  } catch (error) {
+    console.error('Error updating user profile:', error.message);
+    res.status(500).json({ msg: 'Error updating user profile', error: error.message });
+  }
+};
+
+module.exports = { signupVolunteer, loginVolunteer, getUserDetails, updateUserProfile };
