@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Vas = require('../models/volunteers'); 
+const loc = require('../models/Location');
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 
 /**
@@ -126,4 +127,45 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
-module.exports = { signupVolunteer, loginVolunteer, getUserDetails, updateUserProfile };
+const handleLocation = async (req, res) => {
+  try {
+    const { latitude, longitude, allocatedVolunteer, date, time } = req.body;
+    console.log(latitude, longitude, allocatedVolunteer, date, time + 'line `1');
+
+    // Validate latitude and longitude
+    if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+      return res.status(400).json({ msg: 'Invalid latitude or longitude' });
+    }
+
+    // Create a new location document
+    const newLocation = new loc({ latitude, longitude, allocatedVolunteer, date, time });
+    console.log(latitude, longitude, allocatedVolunteer, date, time + 'line `2');
+    await newLocation.save();
+
+    res.status(201).json({ msg: 'Location saved successfully', location: newLocation });
+  } catch (error) {
+    res.status(500).json({ msg: 'Error saving location', error: error.message });
+  }
+}
+
+const userLocation = async (req, res) => {
+  try {
+    const { firstName } = req.params;
+
+    // Find user by first name
+    const user = await Vas.findOne({ firstName });
+    console.log(user);
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    // Fetch locations for the found user
+    const locations = await loc.find({ allocatedVolunteer: user.firstName });
+    console.log(locations)
+    res.status(200).json(locations);
+  } catch (error) {
+    res.status(500).json({ msg: 'Error fetching locations', error: error.message });
+  }
+}
+
+module.exports = { signupVolunteer, loginVolunteer, getUserDetails, updateUserProfile, handleLocation };

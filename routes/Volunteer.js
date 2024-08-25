@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { signupVolunteer, loginVolunteer, getUserDetails, updateUserProfile } = require('../controllers/Volunteer');
+const { signupVolunteer, loginVolunteer, getUserDetails, updateUserProfile, handleLocation } = require('../controllers/Volunteer');
 const auth = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
@@ -23,6 +23,8 @@ router.put('/update-profile', auth, updateUserProfile);
 router.get('/protected', auth, (req, res) => {
     res.json({ msg: 'This is a protected route' });
 });
+
+router.post('/locations', handleLocation)
 
 const uploadDir = path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploadDir)) {

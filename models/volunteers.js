@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs'); 
-const mongoose = require('mongoose'); // Import the mongoose library
+const mongoose = require('mongoose'); 
 
 // Define the schema for the VAS collection
 const vasSchema = new mongoose.Schema({
