@@ -2,13 +2,12 @@ require('dotenv').config();           // Load environment variables from a .env 
 const express = require('express');   // Import the express library
 const cors = require('cors');         // Import the CORS library to handle cross-origin requests
 const connectDB = require('./db/connect'); // Import the connectDB function from the db/connect module
-const productsRoutes = require('./routes/products'); // Import the productsRoutes from the routes/products module
+const Volunteer = require('./models/volunteers');
 const Location = require('./models/Location');
 const Customer = require('./models/Customer');
 const path = require('path');         // Import the path module to handle file paths
 const app = express();                // Create a new express application
 const customerRoutes = require('./routes/Customer');
-
 
 // Set the port for the server to listen on
 const PORT = process.env.PORT || 8888;
@@ -27,40 +26,24 @@ const corsOption = {
 };
 app.use(cors(corsOption));
 
-app.use('/api', productsRoutes);
+
+app.use('/api', Volunteer);
 app.use('/api', customerRoutes);
-
-app.post('/location', async (req, res) => {
-  try {
-    const { latitude, longitude, allocatedVolunteer, date, time } = req.body;
-
-    // Validate latitude and longitude
-    if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-      return res.status(400).json({ msg: 'Invalid latitude or longitude' });
-    }
-
-    // Create a new location document
-    const newLocation = new Location({ latitude, longitude, allocatedVolunteer, date, time });
-    await newLocation.save();
-
-    res.status(201).json({ msg: 'Location saved successfully', location: newLocation });
-  } catch (error) {
-    res.status(500).json({ msg: 'Error saving location', error: error.message });
-  }
-});
 
 app.get('/locations/:firstName', async (req, res) => {
   try {
     const { firstName } = req.params;
 
     // Find user by first name
-    const user = await Customer.findOne({ firstName });
+    const user = await Volunteer.findOne({ firstName });
+    console.log(user);
     if (!user) {
       return res.status(404).json({ msg: 'User not found' });
     }
 
     // Fetch locations for the found user
     const locations = await Location.find({ allocatedVolunteer: user.firstName });
+    console.log(locations)
     res.status(200).json(locations);
   } catch (error) {
     res.status(500).json({ msg: 'Error fetching locations', error: error.message });
