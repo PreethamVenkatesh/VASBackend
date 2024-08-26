@@ -8,6 +8,7 @@ const Customer = require('./models/Customer');
 const path = require('path');         // Import the path module to handle file paths
 const app = express();                // Create a new express application
 const customerRoutes = require('./routes/Customer');
+const volunteerRoutes = require('./routes/Volunteer');
 
 // Set the port for the server to listen on
 const PORT = process.env.PORT || 8888;
@@ -27,7 +28,7 @@ const corsOption = {
 app.use(cors(corsOption));
 
 
-app.use('/api', Volunteer);
+app.use('/api', volunteerRoutes);
 app.use('/api', customerRoutes);
 
 app.get('/locations/:firstName', async (req, res) => {
