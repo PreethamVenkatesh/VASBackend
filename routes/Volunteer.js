@@ -12,7 +12,10 @@ const sharp = require('sharp');
 router.post('/signup', signupVolunteer);
 
 // POST route for login
-router.post('/login', loginVolunteer);
+router.post('/login', (req, res) => {
+    console.log('Login endpoint hit');
+    loginVolunteer(req, res);
+  });
 
 // GET route for user details
 router.get('/user', auth, getUserDetails);
