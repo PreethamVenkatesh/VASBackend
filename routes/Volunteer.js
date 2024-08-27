@@ -54,23 +54,16 @@ router.post('/upload-profile-picture', auth, upload.single('profilePicture'), as
         if (!req.file) {
             return res.status(400).json({ msg: 'No file uploaded' });
         }
-
         const userId = req.user;
-        const originalPath = req.file.path; // Path of the uploaded file
+        const originalPath = req.file.path;
         const resizedPath = path.join(uploadDir, `${Date.now()}-resized-${req.file.filename}`);
-        
-        // Resize the image using sharp
         await sharp(originalPath)
-            .resize(500, 500, { // Resize to 500x500 or adjust as needed
+            .resize(500, 500, { // Resize to 500x500
                 fit: sharp.fit.inside,
                 withoutEnlargement: true
             })
             .toFile(resizedPath);
-
-        // Remove the original file
         fs.unlinkSync(originalPath);
-
-        // Save the relative path of the resized image in the database
         const relativePath = `/uploads/${path.basename(resizedPath)}`;
         await Vas.findByIdAndUpdate(userId, { profilePicture: relativePath });
 
