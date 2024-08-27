@@ -1,7 +1,6 @@
 const bcrypt = require('bcryptjs'); 
 const mongoose = require('mongoose'); 
 
-// Define the schema for the VAS collection
 const vasSchema = new mongoose.Schema({
   firstName: {
     type: String,
@@ -16,10 +15,6 @@ const vasSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  vehicleNumber: {
-    type: String,
-    required: true
-  },
   password: {
     type: String,
     required: true
@@ -27,13 +22,13 @@ const vasSchema = new mongoose.Schema({
   profilePicture: {
     type: String, 
   },
-  volunteer: {
-    type: Boolean,
-    default: true
-  },
   rating: {
     type: Number,
     default: 0.0
+  },
+  status: {
+    type: Boolean,
+    default: false
   },
   createdAt: {
     type: Date,
@@ -41,5 +36,4 @@ const vasSchema = new mongoose.Schema({
   }
 });
 
-// Export the VAS model based on the vasSchema
 module.exports = mongoose.model('Volunteers', vasSchema);
