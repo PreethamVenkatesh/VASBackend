@@ -2,13 +2,13 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const locationSchema = new mongoose.Schema({
-  latitude: {
+  custLocationLat: {
     type: Number,
     required: true, 
     min: -90, 
     max: 90   
   },
-  longitude: {
+  custLocationLong: {
     type: Number,
     required: true, 
     min: -180, 
@@ -30,6 +30,18 @@ const locationSchema = new mongoose.Schema({
     type: Date,
     default: Date.now  
   },
+  destinationLat: {
+    type: Number,
+    required: true, 
+    min: -90, 
+    max: 90   
+  },
+  destinationLong: {
+    type: Number,
+    required: true, 
+    min: -180, 
+    max: 180   
+  }
 });
 
 const Location = mongoose.model('Location', locationSchema);

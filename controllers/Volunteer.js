@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const Vas = require('../models/volunteers'); 
 const loc = require('../models/Location');
@@ -129,22 +130,22 @@ const updateUserProfile = async (req, res) => {
 
 const handleLocation = async (req, res) => {
   try {
-    const { latitude, longitude, allocatedVolunteer, date, time } = req.body;
-    console.log(latitude, longitude, allocatedVolunteer, date, time + 'line `1');
+    const { custLocationLat, custLocationLong, allocatedVolunteer, date, time, destinationLat, destinationLong } = req.body;
 
-    // Validate latitude and longitude
-    if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-      return res.status(400).json({ msg: 'Invalid latitude or longitude' });
+    if (custLocationLat < -90 || custLocationLat > 90 || custLocationLong < -180 || custLocationLong > 180) {
+      return res.status(400).json({ msg: 'Invalid customer latitude or customer longitude' });
     }
 
-    // Create a new location document
-    const newLocation = new loc({ latitude, longitude, allocatedVolunteer, date, time });
-    console.log(latitude, longitude, allocatedVolunteer, date, time + 'line `2');
+    if (destinationLat < -90 || destinationLat > 90 || destinationLong < -180 || destinationLong > 180) {
+      return res.status(400).json({ msg: 'Invalid destination latitude or destination longitude' });
+    }
+
+    const newLocation = new loc({ custLocationLat, custLocationLong, allocatedVolunteer, date, time, destinationLat, destinationLong });
     await newLocation.save();
 
-    res.status(201).json({ msg: 'Location saved successfully', location: newLocation });
+    res.status(201).json({ msg: 'Ride saved successfully', location: newLocation });
   } catch (error) {
-    res.status(500).json({ msg: 'Error saving location', error: error.message });
+    res.status(500).json({ msg: 'Error saving ride', error: error.message });
   }
 }
 
@@ -168,4 +169,30 @@ const userLocation = async (req, res) => {
   }
 }
 
-module.exports = { signupVolunteer, loginVolunteer, getUserDetails, updateUserProfile, handleLocation };
+const verifyVehicle = async (req, res) => {
+  try {
+    console.log('Request Body:', req.body);
+    const { registrationNumber } = req.body;
+    if (!registrationNumber || typeof registrationNumber !== 'string') {
+      return res.status(400).json({ msg: 'Invalid registration number' });
+    }
+    const apiKey = 'lRNIKen41B4vIKQygtbdY6CYml48oeoZ8sXbpt0M';
+    const response = await axios.post(
+      'https://driver-vehicle-licensing.api.gov.uk/vehicle-enquiry/v1/vehicles',
+      { registrationNumber },
+      {
+        headers: {
+          'x-api-key': apiKey,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    res.status(200).json(response.data);
+  } catch (error) {
+    console.error('Error verifying vehicle:', error.message);
+    res.status(500).json({ msg: 'Error verifying vehicle', error: error.message });
+  }
+};
+
+module.exports = { signupVolunteer, loginVolunteer, getUserDetails, updateUserProfile, handleLocation, verifyVehicle };
