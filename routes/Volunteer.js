@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { signupVolunteer, loginVolunteer, getUserDetails, updateUserProfile, handleLocation } = require('../controllers/Volunteer');
+const { signupVolunteer, loginVolunteer, getUserDetails, updateUserProfile, handleLocation, verifyVehicle } = require('../controllers/Volunteer');
 const auth = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
@@ -16,6 +16,9 @@ router.post('/login', (req, res) => {
     console.log('Login endpoint hit');
     loginVolunteer(req, res);
   });
+
+// POST route for vehicle verification
+router.post('/verify-vehicle', auth, verifyVehicle);  
 
 // GET route for user details
 router.get('/user', auth, getUserDetails);
