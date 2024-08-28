@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Cust = require('../models/Customer'); // Import the Customer model
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
-
+const Location = require('../models/Location');
 
 /**
  * Controller function to handle customer signup.
@@ -137,5 +137,25 @@ const updateUser = async (req, res) => {
   }
 };
 
+const createLocation = async (req, res) => {
+  try {
+    const { custLocationLat, custLocationLong, date, time, allocatedVolunteer, destinationLat, destinationLong } = req.body;
 
-module.exports = { customerSignUp, customerLogin, getUserDetails,updateUser };
+    const location = new Location({
+      custLocationLat,
+      custLocationLong,
+      date,
+      time,
+      allocatedVolunteer,
+      destinationLat,
+      destinationLong,
+    });
+
+    const savedLocation = await location.save();
+    res.status(201).json(savedLocation);
+  } catch (error) {
+    res.status(400).json({ message: 'Error saving location', error });
+  }
+};
+
+module.exports = { customerSignUp, customerLogin, getUserDetails,updateUser, createLocation };
