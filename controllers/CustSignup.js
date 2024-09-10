@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const Cust = require('../models/Customer'); // Import the Customer model
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 const Location = require('../models/Location');
+const FutureAssistSchema = require('../models/FutureBooking')
 
 /**
  * Controller function to handle customer signup.
@@ -158,4 +159,25 @@ const createLocation = async (req, res) => {
   }
 };
 
-module.exports = { customerSignUp, customerLogin, getUserDetails,updateUser, createLocation };
+const bookFutureRides = async (req, res) => {
+  try {
+    const { fromLocation, destination, date, time } = req.body;
+
+  // Store the data in the database (replace this with actual database logic)
+  console.log('Future booking received:', {
+    fromLocation,
+    destination,
+    date,
+    time,
+  });
+  const FutureAssist = new FutureAssistSchema({ fromLocation, destination, date, time });
+  await FutureAssist.save();  // Save to MongoDB
+
+  // Send a response back 
+  res.status(201).json({ message: 'Booking confirmed' });
+  } catch (error) {
+    res.status(400).json({ message: 'Error saving booking', error });
+  }
+};
+
+module.exports = { customerSignUp, customerLogin, getUserDetails,updateUser, createLocation, bookFutureRides };
