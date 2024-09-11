@@ -114,46 +114,29 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
-const handleLocation = async (req, res) => {
+const allocateVolunteer = async (customerId, volunteerId) => {
   try {
-    const { custLocationLat, custLocationLong, allocatedVolunteer, date, time, destinationLat, destinationLong } = req.body;
+    const customer = await Customer.findById(customerId);
+    const volunteer = await Vas.findById(volunteerId);
 
-    if (custLocationLat < -90 || custLocationLat > 90 || custLocationLong < -180 || custLocationLong > 180) {
-      return res.status(400).json({ msg: 'Invalid customer latitude or customer longitude' });
+    if (!customer || !volunteer) {
+      throw new Error('Customer or Volunteer not found');
     }
 
-    if (destinationLat < -90 || destinationLat > 90 || destinationLong < -180 || destinationLong > 180) {
-      return res.status(400).json({ msg: 'Invalid destination latitude or destination longitude' });
-    }
+    // Assign the volunteer to the customer
+    customer.allocatedVolunteer = volunteer._id;
+    await customer.save();
 
-    const newLocation = new loc({ custLocationLat, custLocationLong, allocatedVolunteer, date, time, destinationLat, destinationLong });
-    await newLocation.save();
+    // Mark the volunteer as busy
+    volunteer.status = false;
+    await volunteer.save();
 
-    res.status(201).json({ msg: 'Ride saved successfully', location: newLocation });
+    return { success: true };
   } catch (error) {
-    res.status(500).json({ msg: 'Error saving ride', error: error.message });
+    console.error('Error allocating volunteer:', error.message);
+    return { success: false, error: error.message };
   }
-}
-
-const userLocation = async (req, res) => {
-  try {
-    const { firstName } = req.params;
-
-    // Find user by first name
-    const user = await Vas.findOne({ firstName });
-    console.log(user);
-    if (!user) {
-      return res.status(404).json({ msg: 'User not found' });
-    }
-
-    // Fetch locations for the found user
-    const locations = await loc.find({ allocatedVolunteer: user.firstName });
-    console.log(locations)
-    res.status(200).json(locations);
-  } catch (error) {
-    res.status(500).json({ msg: 'Error fetching locations', error: error.message });
-  }
-}
+};
 
 const verifyVehicle = async (req, res) => {
   try {
@@ -196,4 +179,4 @@ const verifyVehicle = async (req, res) => {
   }
 };
 
-module.exports = { signupVolunteer, loginVolunteer, getUserDetails, updateUserProfile, handleLocation, verifyVehicle };
+module.exports = { signupVolunteer, loginVolunteer, getUserDetails, updateUserProfile, allocateVolunteer, verifyVehicle };

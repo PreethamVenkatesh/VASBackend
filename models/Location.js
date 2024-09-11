@@ -14,6 +14,10 @@ const locationSchema = new mongoose.Schema({
     min: -180, 
     max: 180   
   },
+  h3Index: {
+    type: String,
+    required: true
+  },
   date: {
     type: Date,
     required: true

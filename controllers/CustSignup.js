@@ -4,6 +4,8 @@ const Cust = require('../models/Customer'); // Import the Customer model
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 const Location = require('../models/Location');
 const FutureAssistSchema = require('../models/FutureBooking')
+const h3 = require('h3-js')
+const Vas = require('../models/volunteers'); 
 
 /**
  * Controller function to handle customer signup.
@@ -140,22 +142,30 @@ const updateUser = async (req, res) => {
 
 const createLocation = async (req, res) => {
   try {
-    const { custLocationLat, custLocationLong, date, time, allocatedVolunteer, destinationLat, destinationLong } = req.body;
+    const { custLocationLat, custLocationLong, date, time, destinationLat, destinationLong } = req.body;
+    const h3Index = h3.latLngToCell(custLocationLat, custLocationLong, 9);
+    const nearestVolunteer = await findNearestVolunteer(custLocationLat, custLocationLong);
+
+    if (!nearestVolunteer) {
+      return res.status(404).json({ msg: 'No volunteers found nearby' });
+    }
 
     const location = new Location({
       custLocationLat,
       custLocationLong,
+      h3Index,
       date,
       time,
-      allocatedVolunteer,
-      destinationLat,
+      allocatedVolunteer: nearestVolunteer.emailId,
+      destinationLat, 
       destinationLong,
     });
 
     const savedLocation = await location.save();
     res.status(201).json(savedLocation);
   } catch (error) {
-    res.status(400).json({ message: 'Error saving location', error });
+    res.status(400).json({ message: 'Error saving location', error: error.message || error });
+    console.error('Error saving location:', error);
   }
 };
 
@@ -180,4 +190,39 @@ const bookFutureRides = async (req, res) => {
   }
 };
 
-module.exports = { customerSignUp, customerLogin, getUserDetails,updateUser, createLocation, bookFutureRides };
+const findNearestVolunteer = async (custLatitude, custLongitude) => {
+  try {
+    const customerH3Index = h3.latLngToCell(custLatitude, custLongitude, 9);
+    console.log(`Customer H3 Index: ${customerH3Index}`);
+    let ringSize = 1;
+    let nearestVolunteers = [];
+    let closestVolunteer = null;
+    let minDistance = Infinity;
+
+    while (nearestVolunteers.length === 0 && ringSize <= 10) {
+      const nearbyHexes = h3.gridDisk(customerH3Index, ringSize);
+      nearestVolunteers = await Vas.find({
+        h3Index: { $in: nearbyHexes },
+        status: true 
+      });
+      console.log(`Nearest volunteer: ${nearestVolunteers}`);
+      for (let volunteer of nearestVolunteers) {
+        const volunteerH3Index = h3.latLngToCell(volunteer.latitude, volunteer.longitude, 9);
+        const h3Distance = h3.gridDistance(customerH3Index, volunteerH3Index);
+
+        if (h3Distance < minDistance) {
+          minDistance = h3Distance;
+          closestVolunteer = volunteer;
+          console.log(`Closest volunteer: ${closestVolunteer}`);
+        }
+      }
+      ringSize++;
+    }
+    return closestVolunteer;
+  } catch (error) {
+    console.error('Error finding nearest volunteer:', error.message);
+    throw new Error('Error finding nearest volunteer');
+  }
+};
+
+module.exports = { customerSignUp, customerLogin, getUserDetails,updateUser, createLocation, bookFutureRides, findNearestVolunteer };
