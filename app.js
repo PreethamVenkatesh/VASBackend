@@ -31,26 +31,6 @@ app.use(cors(corsOption));
 app.use('/api', volunteerRoutes);
 app.use('/api', customerRoutes);
 
-app.get('/locations/:firstName', async (req, res) => {
-  try {
-    const { firstName } = req.params;
-
-    // Find user by first name
-    const user = await Volunteer.findOne({ firstName });
-    console.log(user);
-    if (!user) {
-      return res.status(404).json({ msg: 'User not found' });
-    }
-
-    // Fetch locations for the found user
-    const locations = await Location.find({ allocatedVolunteer: user.firstName });
-    console.log(locations)
-    res.status(200).json(locations);
-  } catch (error) {
-    res.status(500).json({ msg: 'Error fetching locations', error: error.message });
-  }
-});
-
 app.post("/users", async (req, res) => {
   try {
     // console.log(req.body)

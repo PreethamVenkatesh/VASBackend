@@ -28,7 +28,10 @@ const locationSchema = new mongoose.Schema({
   },
   allocatedVolunteer: {
     type: String,
-    required: true
+  },
+  bookingStatus: {
+    type: String,
+    default: "Pending"
   },
   createdAt: {
     type: Date,
