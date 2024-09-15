@@ -122,14 +122,11 @@ const allocateVolunteer = async (customerId, volunteerId) => {
     if (!customer || !volunteer) {
       throw new Error('Customer or Volunteer not found');
     }
-
-    // Assign the volunteer to the customer
     customer.allocatedVolunteer = volunteer._id;
     await customer.save();
 
-    // Mark the volunteer as busy
-    volunteer.status = false;
-    await volunteer.save();
+    // volunteer.status = false;
+    // await volunteer.save();
 
     return { success: true };
   } catch (error) {
@@ -179,4 +176,150 @@ const verifyVehicle = async (req, res) => {
   }
 };
 
-module.exports = { signupVolunteer, loginVolunteer, getUserDetails, updateUserProfile, allocateVolunteer, verifyVehicle };
+const fetchBookings = async (req, res) => {
+  console.log("First call")
+  try {
+    const { emailId } = req.params;
+    console.log("Users emailId : " + emailId)
+    const user = await Vas.findOne({ emailId });
+    console.log(user);
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+    const locations = await loc.find({ allocatedVolunteer: user.emailId});
+    if (!locations || locations.length === 0) {
+      return res.status(404).json({ msg: 'No bookings found for this user' });
+    }
+    res.status(200).json(locations);
+  } catch (error) {
+    res.status(500).json({ msg: 'Error fetching locations', error: error.message });
+  }
+};
+
+const updateAvailability = async (req, res) => {
+  try {
+    const userId = req.user;  // Fetch the volunteer ID from the authenticated user
+    const { availability } = req.body;  // Availability can be either true (available) or false (unavailable)
+
+    // Find the volunteer by their ID
+    const volunteer = await Vas.findById(userId);
+    if (!volunteer) {
+      return res.status(404).json({ msg: 'Volunteer not found' });
+    }
+
+    // Update the availability status
+    volunteer.availability = availability;
+    await volunteer.save();
+
+    // Respond with success message
+    res.status(200).json({ msg: 'Availability updated successfully' });
+  } catch (error) {
+    res.status(500).json({ msg: 'Error updating availability', error: error.message });
+  }
+};
+
+const updateStatus = async (req, res) => {
+  try {
+    const userId = req.user;  // Fetch the volunteer ID from the authenticated user
+    const { status } = req.body;  // Status can be any string or boolean based on the app logic
+
+    const volunteer = await Vas.findById(userId);
+    if (!volunteer) {
+      return res.status(404).json({ msg: 'Volunteer not found' });
+    }
+
+    volunteer.status = status;  // Update the status
+    await volunteer.save();
+
+    res.status(200).json({ msg: 'Status updated successfully' });
+  } catch (error) {
+    res.status(500).json({ msg: 'Error updating status', error: error.message });
+  }
+};
+
+const updateLocation = async (req, res) => {
+  try {
+    console.log('Update location request received:', req.body);
+
+    const userId = req.user; // Fetch the volunteer ID from the authenticated user
+    const { latitude, longitude } = req.body;
+
+    if (!latitude || !longitude) {
+      return res.status(400).json({ msg: 'Latitude and Longitude are required' });
+    }
+
+    const user = await Vas.findById(userId);
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    const newH3Index = h3.latLngToCell(latitude, longitude, 9);  // Generate H3 index based on latitude and longitude
+    console.log(newH3Index);
+
+    // Update user's location and H3 index
+    user.latitude = latitude;
+    user.longitude = longitude;
+    user.h3Index = newH3Index;
+    await user.save();
+
+    console.log('User saved successfully with updated H3 index.');
+    res.status(200).json({ msg: 'Location updated successfully' });
+  } catch (error) {
+    console.error('Error updating location:', error.message);
+    res.status(500).json({ msg: 'Error updating location', error: error.message });
+  }
+};
+
+const updateBookingStatus = async (req, res) => {
+  try {
+    const { bookingId, status } = req.body;
+
+    const booking = await loc.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({ msg: 'Booking not found' });
+    }
+
+    booking.bookingStatus = status;
+    await booking.save();
+
+    res.status(200).json({ msg: 'Booking status updated successfully' });
+  } catch (error) {
+    res.status(500).json({ msg: 'Error updating booking status', error: error.message });
+  }
+};
+
+const uploadProfilePicture = async (req, res) => {
+  try {
+      if (!req.file) {
+          return res.status(400).json({ msg: 'No file uploaded' });
+      }
+
+      const userId = req.user;
+      const originalPath = req.file.path;
+      const resizedPath = path.join(uploadDir, `${Date.now()}-resized-${req.file.filename}`);
+
+      // Resize the image to 500x500
+      await sharp(originalPath)
+          .resize(500, 500, {
+              fit: sharp.fit.inside,
+              withoutEnlargement: true
+          })
+          .toFile(resizedPath);
+
+      // Delete the original image file
+      fs.unlinkSync(originalPath);
+
+      // Create a relative path for storing in the database
+      const relativePath = `/uploads/${path.basename(resizedPath)}`;
+
+      // Update the user's profile picture in the database
+      await Vas.findByIdAndUpdate(userId, { profilePicture: relativePath });
+
+      res.status(200).json({ msg: 'Profile picture uploaded successfully', profilePicturePath: relativePath });
+  } catch (error) {
+      console.error('Error uploading profile picture:', error.message);
+      res.status(500).json({ msg: 'Error uploading profile picture', error: error.message });
+  }
+};
+
+module.exports = { signupVolunteer, loginVolunteer, getUserDetails, updateUserProfile, allocateVolunteer, verifyVehicle, fetchBookings, updateAvailability, updateStatus, updateLocation, updateBookingStatus, uploadProfilePicture };
