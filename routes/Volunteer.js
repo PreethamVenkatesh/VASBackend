@@ -88,11 +88,13 @@ router.post('/update-location', auth, async (req, res) => {
       }
 
       const newH3Index = h3.latLngToCell(latitude, longitude, 9);
+      console.log(newH3Index);
   
       user.latitude = latitude;
       user.longitude = longitude;
       user.h3Index = newH3Index;
       await user.save();
+      console.log('User saved successfully with updated H3 index.');
   
       res.status(200).json({ msg: 'Location updated successfully' });
     } catch (error) {
