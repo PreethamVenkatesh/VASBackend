@@ -203,7 +203,7 @@ const findNearestVolunteer = async (custLatitude, custLongitude) => {
       const nearbyHexes = h3.gridDisk(customerH3Index, ringSize);
       nearestVolunteers = await Vas.find({
         h3Index: { $in: nearbyHexes },
-        status: true 
+        availability: true 
       });
       console.log(`Nearest volunteer: ${nearestVolunteers}`);
       for (let volunteer of nearestVolunteers) {
