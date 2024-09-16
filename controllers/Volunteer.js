@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const Vas = require('../models/volunteers'); 
 const loc = require('../models/Location');
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
+const sharp = require('sharp');
+const h3 = require('h3-js');
 
 /**
  * Controller function to handle volunteer signup.
@@ -288,6 +290,24 @@ const updateBookingStatus = async (req, res) => {
   }
 };
 
+const updateRideStatus = async (req, res) => {
+  try {
+    const { bookingId, status } = req.body;
+    if (status !== 'Completed') {
+      return res.status(400).json({ msg: 'Invalid status' });
+    }
+    const booking = await loc.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({ msg: 'Ride not found' });
+    }
+    booking.rideStatus = status;
+    await booking.save();
+    res.status(200).json({ msg: 'Ride status updated to Completed successfully' });
+  } catch (error) {
+    res.status(500).json({ msg: 'Error updating ride status', error: error.message });
+  }
+};
+
 const uploadProfilePicture = async (req, res) => {
   try {
       if (!req.file) {
@@ -322,4 +342,4 @@ const uploadProfilePicture = async (req, res) => {
   }
 };
 
-module.exports = { signupVolunteer, loginVolunteer, getUserDetails, updateUserProfile, allocateVolunteer, verifyVehicle, fetchBookings, updateAvailability, updateStatus, updateLocation, updateBookingStatus, uploadProfilePicture };
+module.exports = { signupVolunteer, loginVolunteer, getUserDetails, updateUserProfile, allocateVolunteer, verifyVehicle, fetchBookings, updateAvailability, updateStatus, updateLocation, updateBookingStatus, updateRideStatus, uploadProfilePicture };
