@@ -33,6 +33,10 @@ const locationSchema = new mongoose.Schema({
     type: String,
     default: "Pending"
   },
+  rideStatus: {
+    type: String,
+    default: "Not Started"
+  },
   createdAt: {
     type: Date,
     default: Date.now  

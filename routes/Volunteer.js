@@ -1,13 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { signupVolunteer, loginVolunteer, getUserDetails, updateUserProfile, verifyVehicle, fetchBookings, updateAvailability, updateStatus, updateLocation, updateBookingStatus, uploadProfilePicture } = require('../controllers/Volunteer');
+const { signupVolunteer, loginVolunteer, getUserDetails, updateUserProfile, verifyVehicle, fetchBookings, updateAvailability, updateStatus, updateLocation, updateBookingStatus, updateRideStatus, uploadProfilePicture } = require('../controllers/Volunteer');
 const auth = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const Vas = require('../models/volunteers');
-const sharp = require('sharp');
-const h3 = require('h3-js');
+
 
 // POST route for signup
 router.post('/signup', signupVolunteer);
@@ -35,6 +33,8 @@ router.post('/update-status', auth, updateStatus);
 router.post('/update-location', auth, updateLocation);
 
 router.post('/update-booking-status', auth, updateBookingStatus);
+
+router.post('/update-ride-status', auth, updateRideStatus);
 
 // GET route for protected resource
 router.get('/protected', auth, (req, res) => {
