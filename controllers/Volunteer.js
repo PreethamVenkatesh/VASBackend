@@ -200,20 +200,14 @@ const fetchBookings = async (req, res) => {
 
 const updateAvailability = async (req, res) => {
   try {
-    const userId = req.user;  // Fetch the volunteer ID from the authenticated user
-    const { availability } = req.body;  // Availability can be either true (available) or false (unavailable)
-
-    // Find the volunteer by their ID
+    const userId = req.user;  
+    const { availability } = req.body;  
     const volunteer = await Vas.findById(userId);
     if (!volunteer) {
       return res.status(404).json({ msg: 'Volunteer not found' });
     }
-
-    // Update the availability status
     volunteer.availability = availability;
     await volunteer.save();
-
-    // Respond with success message
     res.status(200).json({ msg: 'Availability updated successfully' });
   } catch (error) {
     res.status(500).json({ msg: 'Error updating availability', error: error.message });
@@ -222,15 +216,13 @@ const updateAvailability = async (req, res) => {
 
 const updateStatus = async (req, res) => {
   try {
-    const userId = req.user;  // Fetch the volunteer ID from the authenticated user
-    const { status } = req.body;  // Status can be any string or boolean based on the app logic
-
+    const userId = req.user;  
+    const { status } = req.body; 
     const volunteer = await Vas.findById(userId);
     if (!volunteer) {
       return res.status(404).json({ msg: 'Volunteer not found' });
     }
-
-    volunteer.status = status;  // Update the status
+    volunteer.status = status;  
     await volunteer.save();
 
     res.status(200).json({ msg: 'Status updated successfully' });
@@ -243,7 +235,7 @@ const updateLocation = async (req, res) => {
   try {
     console.log('Update location request received:', req.body);
 
-    const userId = req.user; // Fetch the volunteer ID from the authenticated user
+    const userId = req.user; 
     const { latitude, longitude } = req.body;
 
     if (!latitude || !longitude) {
