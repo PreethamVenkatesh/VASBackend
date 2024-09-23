@@ -70,7 +70,6 @@ const customerLogin = async (req, res) => {
   try {
     const { emailId, password } = req.body;
 
-    // Check if the user exists in the database
     const existingUser = await Cust.findOne({ emailId });
     if (!existingUser) {
       return res.status(404).json({ msg: 'User does not exist' });
@@ -172,8 +171,6 @@ const createLocation = async (req, res) => {
 const bookFutureRides = async (req, res) => {
   try {
     const { fromLocation, destination, date, time } = req.body;
-
-  // Store the data in the database (replace this with actual database logic)
   console.log('Future booking received:', {
     fromLocation,
     destination,
@@ -181,9 +178,7 @@ const bookFutureRides = async (req, res) => {
     time,
   });
   const FutureAssist = new FutureAssistSchema({ fromLocation, destination, date, time });
-  await FutureAssist.save();  // Save to MongoDB
-
-  // Send a response back 
+  await FutureAssist.save(); 
   res.status(201).json({ message: 'Booking confirmed' });
   } catch (error) {
     res.status(400).json({ message: 'Error saving booking', error });
@@ -199,16 +194,20 @@ const findNearestVolunteer = async (custLatitude, custLongitude) => {
     let closestVolunteer = null;
     let minDistance = Infinity;
 
-    while (nearestVolunteers.length === 0 && ringSize <= 10) {
+    while (nearestVolunteers.length === 0 && ringSize <= 20) {
       const nearbyHexes = h3.gridDisk(customerH3Index, ringSize);
+      console.log('Nearby hexagons:', nearbyHexes);
+      console.log(`Searching with ring size: ${ringSize}`);
       nearestVolunteers = await Vas.find({
         h3Index: { $in: nearbyHexes },
         availability: true 
       });
       console.log(`Nearest volunteer: ${nearestVolunteers}`);
+      let volunteerH3Index = null;
       for (let volunteer of nearestVolunteers) {
-        const volunteerH3Index = h3.latLngToCell(volunteer.latitude, volunteer.longitude, 9);
+        volunteerH3Index = h3.latLngToCell(volunteer.latitude, volunteer.longitude, 9);
         const h3Distance = h3.gridDistance(customerH3Index, volunteerH3Index);
+        console.log(`H3 Distance between customer and volunteer: ${h3Distance}`);
 
         if (h3Distance < minDistance) {
           minDistance = h3Distance;
