@@ -1,11 +1,15 @@
 const bcrypt = require('bcryptjs');
 const axios = require('axios');
+const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 const Vas = require('../models/volunteers'); 
 const loc = require('../models/Location');
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
-const sharp = require('sharp');
 const h3 = require('h3-js');
+
+const generateVerificationCode = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString(); // Generates a random 6-digit number
+};
 
 /**
  * Controller function to handle volunteer signup.
@@ -22,12 +26,15 @@ const signupVolunteer = async (req, res) => {
       return res.status(400).json({ msg: 'User with this email already exists' });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
+    const verificationCode = generateVerificationCode();
     const newUser = new Vas({
       firstName,
       lastName,
       emailId,
-      password: hashedPassword 
+      password: hashedPassword,
+      verificationCode
     });
+    await sendVerificationEmail(emailId, verificationCode);
     await newUser.save();
     res.status(201).json({
       msg: 'User registered successfully',
@@ -37,6 +44,45 @@ const signupVolunteer = async (req, res) => {
     console.error('Error creating user:', error.message);
     res.status(500).json({ msg: 'Error creating user', error: error.message });
   }
+};
+
+const sendVerificationEmail = async (emailId, verificationCode) => {
+  const transporter = nodemailer.createTransport({
+    service: 'gmail', // Use your email service
+    auth: {
+      user: 'vasliftassist@gmail.com', // Your email
+      pass: 'laeo pzft arha mrrq' // Your email password or app password
+    }
+  });
+
+  const mailOptions = {
+    from: 'vasliftassist@gmail.com',
+    to: emailId,
+    subject: 'Email Verification - VAS Lift Assist',
+    text: `Your verification code is: ${verificationCode}`
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
+const verifyEmail = async (req, res) => {
+  const { emailId, verificationCode } = req.body;
+
+  const user = await Vas.findOne({ emailId });
+
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+
+  if (user.verificationCode !== verificationCode) {
+    return res.status(400).json({ message: 'Invalid verification code' });
+  }
+
+  user.status = true; // Mark user as active
+  user.verificationCode = null; // Clear the verification code
+  await user.save();
+
+  res.status(200).json({ message: 'Email verified successfully', user });
 };
 
 /**
@@ -300,38 +346,8 @@ const updateRideStatus = async (req, res) => {
   }
 };
 
-const uploadProfilePicture = async (req, res) => {
-  try {
-      if (!req.file) {
-          return res.status(400).json({ msg: 'No file uploaded' });
-      }
 
-      const userId = req.user;
-      const originalPath = req.file.path;
-      const resizedPath = path.join(uploadDir, `${Date.now()}-resized-${req.file.filename}`);
 
-      // Resize the image to 500x500
-      await sharp(originalPath)
-          .resize(500, 500, {
-              fit: sharp.fit.inside,
-              withoutEnlargement: true
-          })
-          .toFile(resizedPath);
 
-      // Delete the original image file
-      fs.unlinkSync(originalPath);
 
-      // Create a relative path for storing in the database
-      const relativePath = `/uploads/${path.basename(resizedPath)}`;
-
-      // Update the user's profile picture in the database
-      await Vas.findByIdAndUpdate(userId, { profilePicture: relativePath });
-
-      res.status(200).json({ msg: 'Profile picture uploaded successfully', profilePicturePath: relativePath });
-  } catch (error) {
-      console.error('Error uploading profile picture:', error.message);
-      res.status(500).json({ msg: 'Error uploading profile picture', error: error.message });
-  }
-};
-
-module.exports = { signupVolunteer, loginVolunteer, getUserDetails, updateUserProfile, allocateVolunteer, verifyVehicle, fetchBookings, updateAvailability, updateStatus, updateLocation, updateBookingStatus, updateRideStatus, uploadProfilePicture };
+module.exports = { signupVolunteer, verifyEmail, loginVolunteer, getUserDetails, updateUserProfile, allocateVolunteer, verifyVehicle, fetchBookings, updateAvailability, updateStatus, updateLocation, updateBookingStatus, updateRideStatus };
