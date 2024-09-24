@@ -49,6 +49,10 @@ const vasSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  verificationCode: {
+    type: String, 
+    required: false
   }
 });
 
