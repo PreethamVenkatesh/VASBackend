@@ -16,24 +16,16 @@ const Vas = require('../models/volunteers');
  */
 const customerSignUp = async (req, res) => {
   try {
-    // Destructure the necessary fields from the request body
     const { firstName, lastName, emailId, phoneNumber, password } = req.body;
-
-    // Check if all required fields are present
     if (!firstName || !lastName || !emailId || !phoneNumber || !password) {
       return res.status(400).json({ msg: 'All fields are required' });
     }
-
-    // Check if a user with the provided email already exists in the database
     const existingUser = await Cust.findOne({ emailId });
     if (existingUser) {
-      // If user exists, respond with a 400 status and a message
       return res.status(400).json({ msg: 'User with this email already exists' });
     }
     console.log('Original Password:', password);
-
     const hashedPassword = await bcrypt.hash(password, 10);
-
     console.log('Hashed Password:', hashedPassword);
 
     const custUser = new Cust({
@@ -43,17 +35,12 @@ const customerSignUp = async (req, res) => {
       phoneNumber,
       password: hashedPassword
     });
-
-    // Save the new user to the database
     await custUser.save();
-
-    // Respond with a 201 status and a success message along with the new user data
     res.status(201).json({
       msg: 'User registered successfully',
       user: custUser
     });
   } catch (error) {
-    // Log the error to the console for debugging purposes
     console.error('Error creating user:', error);
     res.status(500).json({ msg: 'Error creating user', error });
   }
@@ -75,13 +62,10 @@ const customerLogin = async (req, res) => {
       return res.status(404).json({ msg: 'User does not exist' });
     }
 
-    // Check if the password matches
-    // const isMatch = await bcrypt.compare(password, existingUser.password);
-    if (password !== existingUser.password) {
+    const isMatch = await bcrypt.compare(password, existingUser.password);
+    if (!isMatch) {
       return res.status(400).json({ msg: 'Invalid credentials' });
     }
-
-    // Generate a JWT token
     const token = jwt.sign({ userId: existingUser._id,emailId:existingUser.emailId}, JWT_SECRET, { expiresIn: '1h' });
     console.log(token)
     res.status(200).json({
