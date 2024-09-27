@@ -21,46 +21,22 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Middleware to enable CORS (Cross-Origin Resource Sharing) for all routes
 const corsOption = {
   origin: ["http://localhost:3000"],
-  // origin: ["https://my-json-server.typicode.com/santoshlearner07/users_api"],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE"],
 };
 app.use(cors(corsOption));
-
-
 app.use('/api', volunteerRoutes);
 app.use('/api', customerRoutes);
 
-app.post("/users", async (req, res) => {
-  try {
-    // console.log(req.body)
-    const user = await Customer.create(req.body);
-    // console.log(user)
-    res.status(200).json(user);
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).json({ message: error.message });
-  }
-});
-
-app.post("/test", (req, res) => {
-  console.log(req.body);
-  res.send(req.body);
-});
-
 const start = async () => {
   try {
-    // Attempt to connect to the MongoDB database using the connection string from environment variables
     await connectDB(process.env.MONGODB_URL);
     app.listen(PORT, () => {
-      // Start the server and log the URL it's running on
       console.log(`Server is running on http://localhost:${PORT}`);
     });
   } catch (error) {
-    // Log any errors that occur while starting the server
     console.error('Error starting server:', error);
   }
 };
 
-// Call the start function to initialize the database connection and start the server
 start();
