@@ -52,6 +52,10 @@ const locationSchema = new mongoose.Schema({
     required: true, 
     min: -180, 
     max: 180   
+  },
+  customerEmailId: { 
+    type: String,
+    default: null
   }
 });
 

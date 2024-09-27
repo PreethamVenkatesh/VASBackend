@@ -244,6 +244,26 @@ const fetchBookings = async (req, res) => {
   }
 };
 
+//Manasa Code
+const verifyAllocatedVolunteer = async (req, res) => {
+  try {
+      const { allocatedVolunteerEmail } = req.params; 
+      
+      console.log("Verifying Allocated Volunteer Email: ", allocatedVolunteerEmail);
+      
+      const volunteer = await Vas.findOne({ emailId: allocatedVolunteerEmail });
+      
+      if (!volunteer) {
+          return res.status(404).json({ msg: 'Allocated volunteer not found' });
+      }
+      
+      res.status(200).json(volunteer);
+  } catch (error) {
+      console.error('Error verifying allocated volunteer:', error.message);
+      res.status(500).json({ msg: 'Error verifying allocated volunteer', error: error.message });
+  }
+};
+
 const updateAvailability = async (req, res) => {
   try {
     const userId = req.user;  
@@ -350,4 +370,4 @@ const updateRideStatus = async (req, res) => {
 
 
 
-module.exports = { signupVolunteer, verifyEmail, loginVolunteer, getUserDetails, updateUserProfile, allocateVolunteer, verifyVehicle, fetchBookings, updateAvailability, updateStatus, updateLocation, updateBookingStatus, updateRideStatus };
+module.exports = { signupVolunteer, verifyEmail, loginVolunteer, getUserDetails, updateUserProfile, allocateVolunteer, verifyVehicle, fetchBookings, updateAvailability, updateStatus, updateLocation, updateBookingStatus, updateRideStatus, verifyAllocatedVolunteer };

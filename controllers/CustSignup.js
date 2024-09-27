@@ -125,7 +125,7 @@ const updateUser = async (req, res) => {
 
 const createLocation = async (req, res) => {
   try {
-    const { custLocationLat, custLocationLong, date, time, destinationLat, destinationLong } = req.body;
+    const { custLocationLat, custLocationLong, date, time, destinationLat, destinationLong,customerEmailId } = req.body;
     const h3Index = h3.latLngToCell(custLocationLat, custLocationLong, 9);
     const nearestVolunteer = await findNearestVolunteer(custLocationLat, custLocationLong);
 
@@ -142,6 +142,7 @@ const createLocation = async (req, res) => {
       allocatedVolunteer: nearestVolunteer.emailId,
       destinationLat, 
       destinationLong,
+      customerEmailId
     });
 
     const savedLocation = await location.save();
@@ -149,6 +150,27 @@ const createLocation = async (req, res) => {
   } catch (error) {
     res.status(400).json({ message: 'Error saving location', error: error.message || error });
     console.error('Error saving location:', error);
+  }
+};
+
+const getLocations = async (req, res) => {
+  try {
+    const { emailId } = req.query; 
+
+    const query = {};
+    if (emailId) {
+      query.allocatedVolunteer = emailId; 
+    }
+
+    const locations = await Location.find(query);
+
+    if (!locations || locations.length === 0) {
+      return res.status(404).json({ msg: 'No locations found' });
+    }
+
+    res.status(200).json(locations);
+  } catch (error) {
+    res.status(500).json({ msg: 'Error fetching locations', error: error.message });
   }
 };
 
@@ -208,4 +230,24 @@ const findNearestVolunteer = async (custLatitude, custLongitude) => {
   }
 };
 
-module.exports = { customerSignUp, customerLogin, getUserDetails,updateUser, createLocation, bookFutureRides, findNearestVolunteer };
+//to verify booking status
+const bookingConfirmation = async (req, res) => {
+  try {
+    const { customerEmailId } = req.params;
+
+    const booking = await Location.findOne({ customerEmailId }).sort({ createdAt: -1 });
+
+    if (!booking) {
+      return res.status(404).json({ message: 'No booking found for this customer.' });
+    }
+
+    // Return the booking status
+    res.json({ bookingStatus: booking.bookingStatus });
+  } catch (error) {
+    console.error('Error fetching booking status:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+module.exports = { customerSignUp, customerLogin, getUserDetails,updateUser, createLocation, getLocations, bookFutureRides, findNearestVolunteer, bookingConfirmation };

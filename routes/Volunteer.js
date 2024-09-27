@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { signupVolunteer, verifyEmail, loginVolunteer, getUserDetails, updateUserProfile, verifyVehicle, fetchBookings, updateAvailability, updateStatus, updateLocation, updateBookingStatus, updateRideStatus } = require('../controllers/Volunteer');
+const { signupVolunteer, verifyEmail, loginVolunteer, getUserDetails, updateUserProfile, verifyVehicle, fetchBookings, updateAvailability, updateStatus, updateLocation, updateBookingStatus, updateRideStatus, verifyAllocatedVolunteer } = require('../controllers/Volunteer');
 const auth = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
@@ -38,6 +38,8 @@ router.post('/update-location', auth, updateLocation);
 router.post('/update-booking-status', auth, updateBookingStatus);
 
 router.post('/update-ride-status', auth, updateRideStatus);
+
+router.get('/verify-volunteer/:allocatedVolunteerEmail', verifyAllocatedVolunteer);
 
 // GET route for protected resource
 router.get('/protected', auth, (req, res) => {
