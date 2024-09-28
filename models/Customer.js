@@ -1,7 +1,10 @@
+// Importing bcryptjs for password hashing
 const bcrypt = require('bcryptjs'); 
+
+// Importing mongoose to define the schema for Customer MongoDB collection
 const mongoose = require('mongoose');
 
-// Define the schema for the Customer collection
+// Defining the schema for the Customer collection
 const custSchema = new mongoose.Schema({
   firstName: {
     type: String,

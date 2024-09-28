@@ -1,6 +1,10 @@
+// Importing bcryptjs for password hashing
 const bcrypt = require('bcryptjs'); 
+
+// Importing mongoose to define the schema for Volunteers MongoDB collection
 const mongoose = require('mongoose'); 
 
+// Defining the schema for the Volunteers collection
 const vasSchema = new mongoose.Schema({
   firstName: {
     type: String,

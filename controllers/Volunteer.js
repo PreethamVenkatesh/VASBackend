@@ -9,12 +9,12 @@ const h3 = require('h3-js');
 const Location = require('../models/Location')
 
 const generateVerificationCode = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString(); // Generates a random 6-digit number
+  return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
 /**
  * Controller function to handle volunteer signup.
- * This function creates a new volunteer user if the email does not already exist.
+ * This function creates a new volunteer user .
  * 
  * @param {Object} req - The request object
  * @param {Object} res - The response object
@@ -47,16 +47,24 @@ const signupVolunteer = async (req, res) => {
   }
 };
 
+/**
+ * Controller function to send email OTP to volunteer.
+ * This function allows the volunteer user to login with email and password.
+ * 
+ * @param {Object} emailId - The emailId request object
+ * @param {Object} verificationCode - The verification code response object
+ */
 const sendVerificationEmail = async (emailId, verificationCode) => {
   const transporter = nodemailer.createTransport({
-    service: 'gmail', // Use your email service
+    service: 'gmail', 
     auth: {
-      user: 'vasliftassist@gmail.com', // Your email
-      pass: 'laeo pzft arha mrrq' // Your email password or app password
+      user: 'vasliftassist@gmail.com', 
+      pass: 'laeo pzft arha mrrq' 
     }
   });
 
-  const mailOptions = {
+
+const mailOptions = {
     from: 'vasliftassist@gmail.com',
     to: emailId,
     subject: 'Email Verification - VAS Lift Assist',
@@ -66,6 +74,13 @@ const sendVerificationEmail = async (emailId, verificationCode) => {
   await transporter.sendMail(mailOptions);
 };
 
+/**
+ * Controller function to handle volunteer email verification.
+ * This function verifies the volunteer's email address.
+ * 
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
 const verifyEmail = async (req, res) => {
   const { emailId, verificationCode } = req.body;
 
@@ -88,7 +103,7 @@ const verifyEmail = async (req, res) => {
 
 /**
  * Controller function to handle volunteer login.
- * This function checks the email and password for an existing volunteer user.
+ * This function allows the volunteer user to login with email and password.
  * 
  * @param {Object} req - The request object
  * @param {Object} res - The response object
@@ -119,6 +134,13 @@ const loginVolunteer = async (req, res) => {
   }
 };
 
+/**
+ * Controller function to fetch volunteer details.
+ * This function get's the volunteer user's details.
+ * 
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
 const getUserDetails = async (req, res) => {
   try {
     const userId = req.user;
@@ -133,6 +155,13 @@ const getUserDetails = async (req, res) => {
   }
 };
 
+/**
+ * Controller function to update volunteer details.
+ * This function updates the volunteer user details.
+ * 
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
 const updateUserProfile = async (req, res) => {
   try {
     const userId = req.user;
@@ -163,6 +192,13 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
+/**
+ * Controller function to allocate volunteer.
+ * This function allows the volunteer user to login with email and password.
+ * 
+ * @param {Object} customerId - The customer id request object
+ * @param {Object} volunteerId - The volunteer id response object
+ */
 const allocateVolunteer = async (customerId, volunteerId) => {
   try {
     const customer = await Customer.findById(customerId);
@@ -174,9 +210,6 @@ const allocateVolunteer = async (customerId, volunteerId) => {
     customer.allocatedVolunteer = volunteer._id;
     await customer.save();
 
-    // volunteer.status = false;
-    // await volunteer.save();
-
     return { success: true };
   } catch (error) {
     console.error('Error allocating volunteer:', error.message);
@@ -184,6 +217,13 @@ const allocateVolunteer = async (customerId, volunteerId) => {
   }
 };
 
+/**
+ * Controller function to handle volunteer vehicle verification.
+ * This function verifies the vehicle plate number of volunteer user.
+ * 
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
 const verifyVehicle = async (req, res) => {
   try {
     console.log('Request Body:', req.body);
@@ -225,6 +265,13 @@ const verifyVehicle = async (req, res) => {
   }
 };
 
+/**
+ * Controller function to fetch volunteer bookings .
+ * This function gets the bookings assigned to the volunteer user.
+ * 
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
 const fetchBookings = async (req, res) => {
   console.log("First call")
   try {
@@ -245,13 +292,16 @@ const fetchBookings = async (req, res) => {
   }
 };
 
-//Manasa Code
+/**
+ * Controller function to verify allocated volunteer.
+ * This function verifies the allocated volunteer user.
+ * 
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
 const verifyAllocatedVolunteer = async (req, res) => {
   try {
       const { allocatedVolunteerEmail } = req.params; 
-      
-      console.log("Verifying Allocated Volunteer Email: ", allocatedVolunteerEmail);
-      
       const volunteer = await Vas.findOne({ emailId: allocatedVolunteerEmail });
       
       if (!volunteer) {
@@ -265,6 +315,13 @@ const verifyAllocatedVolunteer = async (req, res) => {
   }
 };
 
+/**
+ * Controller function to update volunteer availability.
+ * This function updates the availability of the volunteer user.
+ * 
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
 const updateAvailability = async (req, res) => {
   try {
     const userId = req.user;  
@@ -281,6 +338,13 @@ const updateAvailability = async (req, res) => {
   }
 };
 
+/**
+ * Controller function to update volunteer status.
+ * This function updates the status of the volunteer user.
+ * 
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
 const updateStatus = async (req, res) => {
   try {
     const userId = req.user;  
@@ -298,6 +362,13 @@ const updateStatus = async (req, res) => {
   }
 };
 
+/**
+ * Controller function to update volunteer location.
+ * This function updates the location of the volunteer user.
+ * 
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
 const updateLocation = async (req, res) => {
   try {
     console.log('Update location request received:', req.body);
@@ -331,6 +402,13 @@ const updateLocation = async (req, res) => {
   }
 };
 
+/**
+ * Controller function to update volunteer booking status.
+ * This function updates the booking status of the volunteer user.
+ * 
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
 const updateBookingStatus = async (req, res) => {
   try {
     const { bookingId, status } = req.body;
@@ -349,6 +427,13 @@ const updateBookingStatus = async (req, res) => {
   }
 };
 
+/**
+ * Controller function to update volunteer ride status.
+ * This function updates the ride status of the volunteer user.
+ * 
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
 const updateRideStatus = async (req, res) => {
   try {
     const { bookingId, status } = req.body;
@@ -367,8 +452,7 @@ const updateRideStatus = async (req, res) => {
   }
 };
 
-
-
-
-
-module.exports = { signupVolunteer, verifyEmail, loginVolunteer, getUserDetails, updateUserProfile, allocateVolunteer, verifyVehicle, fetchBookings, updateAvailability, updateStatus, updateLocation, updateBookingStatus, updateRideStatus, verifyAllocatedVolunteer };
+module.exports = { signupVolunteer, verifyEmail, loginVolunteer, getUserDetails, 
+                    updateUserProfile, allocateVolunteer, verifyVehicle, fetchBookings, 
+                      updateAvailability, updateStatus, updateLocation, updateBookingStatus, 
+                        updateRideStatus, verifyAllocatedVolunteer };
