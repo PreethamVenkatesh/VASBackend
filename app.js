@@ -1,20 +1,16 @@
-require('dotenv').config();           // Load environment variables from a .env file into process.env
-const express = require('express');   // Import the express library
-const cors = require('cors');         // Import the CORS library to handle cross-origin requests
-const connectDB = require('./db/connect'); // Import the connectDB function from the db/connect module
-const Volunteer = require('./models/volunteers');
-const Location = require('./models/Location');
-const Customer = require('./models/Customer');
+require('dotenv').config();           // Loading environment variables from .env file into process.env
+const express = require('express');   // Import the express library for Express application
+const cors = require('cors');         // Importing the CORS library to handle cross-origin requests and prevent CORS issues
+const connectDB = require('./db/connect'); // Import the connectDB function to connect to MongoDB
 const path = require('path');         // Import the path module to handle file paths
 const app = express();                // Create a new express application
+
 const customerRoutes = require('./routes/Customer');
 const volunteerRoutes = require('./routes/Volunteer');
 
-// Set the port for the server to listen on
-const PORT = process.env.PORT || 8888;
+const PORT = process.env.PORT || 8888; // Setting the port for the server to listen on
 
-// Middleware to parse JSON bodies of incoming requests
-app.use(express.json());
+app.use(express.json()); // Middleware to parse JSON bodies of incoming requests
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -24,10 +20,12 @@ const corsOption = {
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE"],
 };
+
 app.use(cors(corsOption));
 app.use('/api', volunteerRoutes);
 app.use('/api', customerRoutes);
 
+// Function to initialize the server and connect to database
 const start = async () => {
   try {
     await connectDB(process.env.MONGODB_URL);

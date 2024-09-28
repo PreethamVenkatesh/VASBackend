@@ -1,6 +1,10 @@
+// Importing mongoose to define the schema for Location MongoDB collection
 const mongoose = require('mongoose'); 
+
+// Importing bcryptjs for password hashing
 const bcrypt = require('bcryptjs');
 
+// Defining the schema for the Location collection
 const locationSchema = new mongoose.Schema({
   custLocationLat: {
     type: Number,

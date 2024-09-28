@@ -1,6 +1,9 @@
 const jwt = require('jsonwebtoken');
+
+// Defining a secret key for JWT verification
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 
+// Middleware function for authentication
 const auth = (req, res, next) => {
   const token = req.header('Authorization');
   if (!token) {

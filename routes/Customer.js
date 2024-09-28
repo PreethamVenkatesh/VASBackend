@@ -26,6 +26,5 @@ router.get('/volunteer-location/:email', getVolunteerLocation);
 
 router.post('/booking/:bookingId/rating', updateRatingFeedback);
 
-// Export the router object so it can be used in other parts of the application
 module.exports = router;
 
