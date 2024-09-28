@@ -269,5 +269,28 @@ const getVolunteerLocation = async (req, res) => {
   }
 };
 
+const updateRatingFeedback = async (req, res) => {
+  try {
+    const { bookingId } = req.params; // Get the booking ID from URL params
+    const { rating, feedback } = req.body; // Get the ratings and feedback from the request body
 
-module.exports = { customerSignUp, customerLogin, getUserDetails,updateUser, createLocation, getLocations, bookFutureRides, findNearestVolunteer, bookingConfirmation, getVolunteerLocation };
+    // Find the booking by its ID and update ratings and feedback
+    const updatedBooking = await Location.findByIdAndUpdate(
+      bookingId,
+      { rating, feedback },
+      { new: true }
+    );
+
+    if (!updatedBooking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+
+    res.status(200).json({ message: 'Rating and feedback updated successfully', booking: updatedBooking });
+  } catch (error) {
+    console.error('Error updating rating and feedback:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+module.exports = { customerSignUp, customerLogin, getUserDetails,updateUser, createLocation, getLocations, bookFutureRides, findNearestVolunteer, bookingConfirmation, getVolunteerLocation, updateRatingFeedback };
