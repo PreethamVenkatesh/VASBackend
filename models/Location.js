@@ -56,6 +56,14 @@ const locationSchema = new mongoose.Schema({
   customerEmailId: { 
     type: String,
     default: null
+  },
+  rating: {
+    type: Number,
+    default: 0
+  },
+  feedback: {
+    type: String,
+    default: "No feedback"
   }
 });
 

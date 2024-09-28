@@ -1,6 +1,6 @@
 const express = require('express');     // Import the express library
 const router = express.Router();        // Create a new router object
-const { customerSignUp, customerLogin, getUserDetails, updateUser, getLocations, createLocation, bookFutureRides, bookingConfirmation, getVolunteerLocation } = require('../controllers/CustSignup');     // Import the signupVolunteer function from the products controller
+const { customerSignUp, customerLogin, getUserDetails, updateUser, getLocations, createLocation, bookFutureRides, bookingConfirmation, getVolunteerLocation, updateRatingFeedback } = require('../controllers/CustSignup');     // Import the signupVolunteer function from the products controller
 
 // POST route defined for the '/signup' endpoint, which uses the signupVolunteer function as its handler
 router.post('/custregister', customerSignUp);
@@ -23,6 +23,8 @@ router.post('/futurelocation', bookFutureRides);
 router.get('/booking-status/:customerEmailId', bookingConfirmation );
 
 router.get('/volunteer-location/:email', getVolunteerLocation);
+
+router.post('/booking/:bookingId/rating', updateRatingFeedback);
 
 // Export the router object so it can be used in other parts of the application
 module.exports = router;
