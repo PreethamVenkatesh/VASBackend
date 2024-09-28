@@ -242,12 +242,32 @@ const bookingConfirmation = async (req, res) => {
     }
 
     // Return the booking status
-    res.json({ bookingStatus: booking.bookingStatus });
+    res.json({ booking });
   } catch (error) {
     console.error('Error fetching booking status:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
 
+const getVolunteerLocation = async (req, res) => {
+  try {
+    const { email } = req.params;
+    console.log("EmailId : " + email)
+    const volunteer = await Vas.findOne({ emailId: email }); 
+    console.log("Volunteer : " + volunteer)
 
-module.exports = { customerSignUp, customerLogin, getUserDetails,updateUser, createLocation, getLocations, bookFutureRides, findNearestVolunteer, bookingConfirmation };
+    if (!volunteer) {
+      return res.status(404).json({ message: 'Volunteer not found' });
+    }
+    res.json({
+      lat: volunteer.latitude,  
+      lng: volunteer.longitude,
+    });
+  } catch (error) {
+    console.error('Error fetching volunteer location:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+module.exports = { customerSignUp, customerLogin, getUserDetails,updateUser, createLocation, getLocations, bookFutureRides, findNearestVolunteer, bookingConfirmation, getVolunteerLocation };
