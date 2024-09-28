@@ -6,6 +6,7 @@ const Vas = require('../models/volunteers');
 const loc = require('../models/Location');
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 const h3 = require('h3-js');
+const Location = require('../models/Location')
 
 const generateVerificationCode = () => {
   return Math.floor(100000 + Math.random() * 900000).toString(); // Generates a random 6-digit number
