@@ -191,6 +191,19 @@ const bookFutureRides = async (req, res) => {
   }
 };
 
+const getFutureBookings = async (req, res) => {
+  try {
+    const futureBookings = await FutureAssistSchema.find();
+    if (!futureBookings || futureBookings.length === 0) {
+      return res.status(404).json({ msg: 'No future bookings found' });
+    }
+    res.status(200).json(futureBookings);
+  } catch (error) {
+    res.status(500).json({ msg: 'Error fetching future bookings', error: error.message });
+  }
+};
+
+
 const findNearestVolunteer = async (custLatitude, custLongitude) => {
   try {
     const customerH3Index = h3.latLngToCell(custLatitude, custLongitude, 9);
@@ -230,7 +243,6 @@ const findNearestVolunteer = async (custLatitude, custLongitude) => {
   }
 };
 
-//to verify booking status
 const bookingConfirmation = async (req, res) => {
   try {
     const { customerEmailId } = req.params;
@@ -293,4 +305,4 @@ const updateRatingFeedback = async (req, res) => {
 };
 
 
-module.exports = { customerSignUp, customerLogin, getUserDetails,updateUser, createLocation, getLocations, bookFutureRides, findNearestVolunteer, bookingConfirmation, getVolunteerLocation, updateRatingFeedback };
+module.exports = { customerSignUp, customerLogin, getUserDetails,updateUser, createLocation, getLocations, bookFutureRides, getFutureBookings, findNearestVolunteer, bookingConfirmation, getVolunteerLocation, updateRatingFeedback };
