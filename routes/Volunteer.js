@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { signupVolunteer, verifyEmail, loginVolunteer, getUserDetails, updateUserProfile, verifyVehicle, fetchBookings, updateAvailability, updateStatus, updateLocation, updateBookingStatus, updateRideStatus, verifyAllocatedVolunteer } = require('../controllers/Volunteer');
+const { signupVolunteer, verifyEmail, loginVolunteer, getUserDetails, updateUserProfile, verifyVehicle, fetchBookings, updateAvailability, updateStatus, updateLocation, updateBookingStatus, updateRideStatus, verifyAllocatedVolunteer, getCompletedRides } = require('../controllers/Volunteer');
 const auth = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
@@ -104,5 +104,8 @@ const uploadProfilePicture = async (req, res) => {
 
 // POST route to upload profile picture
 router.post('/upload-profile-picture', auth, upload.single('profilePicture'), uploadProfilePicture);
+
+//GET route to fetch completed rides
+router.get('/completed-rides', getCompletedRides);
 
 module.exports = router;

@@ -452,7 +452,16 @@ const updateRideStatus = async (req, res) => {
   }
 };
 
+const getCompletedRides = async (req, res) => {
+  try {
+    const completedRides = await Location.find({ rideStatus: 'Completed' });
+    res.status(200).json(completedRides);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching completed rides', error });
+  }
+};
+
 module.exports = { signupVolunteer, verifyEmail, loginVolunteer, getUserDetails, 
                     updateUserProfile, allocateVolunteer, verifyVehicle, fetchBookings, 
                       updateAvailability, updateStatus, updateLocation, updateBookingStatus, 
-                        updateRideStatus, verifyAllocatedVolunteer };
+                        updateRideStatus, verifyAllocatedVolunteer, getCompletedRides };
