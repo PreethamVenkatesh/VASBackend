@@ -111,6 +111,24 @@ VASBACKEND/
 └── package.json         # Project dependencies
 ```
 
+## File Structure
+ 
+```
+VASBACKEND/
+│
+├── controllers/        # Controller logic for various resources
+├── middleWare/         # Custom middleware (e.g., CORS)
+├── models/             # Mongoose schemas for database entities
+├── routes/             # Route handlers for API endpoints
+├── uploads/            # Directory for storing uploaded images
+├── config/             # Environment configuration (e.g., database connection)
+├── db/                 # Database connection logic
+├── .env                # Environment variable file
+├── app.js              # Main application setup
+├── server.js           # Entry point for starting the server
+└── README.md           # Project documentation
+```
+
 ## Contributing
  
 Contributions are welcome! Please fork the repository and submit a pull request.
