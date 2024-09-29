@@ -1,33 +1,36 @@
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs'); // Library for hashing passwords
+const jwt = require('jsonwebtoken'); // Library for creating and verifying JSON Web Tokens (JWT)
 const Cust = require('../models/Customer'); // Import the Customer model
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key'; // Secret key for JWT signing, fallback to hardcoded value
 const Location = require('../models/Location');
 const FutureAssistSchema = require('../models/FutureBooking')
-const h3 = require('h3-js')
+const h3 = require('h3-js') // Import H3 library for geospatial indexing
 const Vas = require('../models/volunteers'); 
 
 /**
  * Controller function to handle customer signup.
  * This function creates a new customer user if the email does not already exist.
  * 
- * @param {Object} req - The request object
+ * @param {Object} req - The request object containing user data
  * @param {Object} res - The response object
  */
 const customerSignUp = async (req, res) => {
   try {
+    // Extract data from the request body
     const { firstName, lastName, emailId, phoneNumber, password } = req.body;
     if (!firstName || !lastName || !emailId || !phoneNumber || !password) {
       return res.status(400).json({ msg: 'All fields are required' });
     }
+    // Check if the user already exists based on email
     const existingUser = await Cust.findOne({ emailId });
     if (existingUser) {
       return res.status(400).json({ msg: 'User with this email already exists' });
     }
-    console.log('Original Password:', password);
+    // Hash the user's password
     const hashedPassword = await bcrypt.hash(password, 10);
     console.log('Hashed Password:', hashedPassword);
 
+     // Create a new customer object
     const custUser = new Cust({
       firstName,
       lastName,
@@ -35,6 +38,8 @@ const customerSignUp = async (req, res) => {
       phoneNumber,
       password: hashedPassword
     });
+
+    // Save the new user to the database
     await custUser.save();
     res.status(201).json({
       msg: 'User registered successfully',
@@ -55,17 +60,22 @@ const customerSignUp = async (req, res) => {
  */
 const customerLogin = async (req, res) => {
   try {
+    // Extract email and password from request body
     const { emailId, password } = req.body;
 
+    // Check if the user exists
     const existingUser = await Cust.findOne({ emailId });
     if (!existingUser) {
       return res.status(404).json({ msg: 'User does not exist' });
     }
 
+    // Compare input password with the stored hashed password
     const isMatch = await bcrypt.compare(password, existingUser.password);
     if (!isMatch) {
       return res.status(400).json({ msg: 'Invalid credentials' });
     }
+
+    // Generate a JWT token valid for 1 hour
     const token = jwt.sign({ userId: existingUser._id,emailId:existingUser.emailId}, JWT_SECRET, { expiresIn: '1h' });
     console.log(token)
     res.status(200).json({
@@ -79,17 +89,17 @@ const customerLogin = async (req, res) => {
 };
 
 /**
- * Controller function to handle fetching customer details.
- * This function retrieves the details of the authenticated customer user.
+ * Fetch customer details based on email.
  * 
- * @param {Object} req - The request object
- * @param {Object} res - The response object
+ * @param {Object} req - Request object with email query
+ * @param {Object} res - Response object to send user data
  */
 
 const getUserDetails = async (req, res) => {
   const {emailId} = req.query;
   console.log(emailId)
   try {
+    // Find user by email
     const user = await Cust.findOne({emailId});
     console.log(user)
     if (!user) {
@@ -102,31 +112,48 @@ const getUserDetails = async (req, res) => {
   }
 };
 
+/**
+ * Update customer details.
+ * 
+ * @param {Object} req - Request object containing updated user data
+ * @param {Object} res - Response object to return updated data or errors
+ */
 const updateUser = async (req, res) => {
-  const { emailId } = req.body;  // use req.body to fetch emailId and updated data from request body
-  const { firstName, lastName, phoneNumber } = req.body;
+  const { emailId } = req.body;  // Get emailId to identify the user
+  const { firstName, lastName, phoneNumber } = req.body; // Extract new details to update
 
   try {
+    // Find the user by emailId and update the details
     const updatedUser = await Cust.findOneAndUpdate(
-      { emailId }, // Find the document by emailId
-      { firstName, lastName, phoneNumber }, // Update the specified fields
-      { new: true, runValidators: true } // Options: return the updated document and run validators
+      { emailId }, 
+      { firstName, lastName, phoneNumber }, 
+      { new: true, runValidators: true } 
     );
-
+    
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found." });
     }
-
+    // Return the updated user details
     res.status(200).json(updatedUser);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
+/**
+ * Save customer location and find the nearest available volunteer using H3 geospatial indexing.
+ * 
+ * @param {Object} req - Request object with location data
+ * @param {Object} res - Response object to send back success or error message
+ */
 const createLocation = async (req, res) => {
   try {
     const { custLocationLat, custLocationLong, date, time, destinationLat, destinationLong,customerEmailId } = req.body;
+    
+    // Get the H3 geospatial index for the customer location
     const h3Index = h3.latLngToCell(custLocationLat, custLocationLong, 9);
+
+    // Find the nearest volunteer to the customer 
     const nearestVolunteer = await findNearestVolunteer(custLocationLat, custLocationLong);
 
     if (!nearestVolunteer) {
@@ -153,13 +180,19 @@ const createLocation = async (req, res) => {
   }
 };
 
+/**
+ * Fetch customer locations. If an emailId is provided, filter by allocated volunteer.
+ * 
+ * @param {Object} req - Request object with query params
+ * @param {Object} res - Response object to send locations data
+ */
 const getLocations = async (req, res) => {
   try {
     const { emailId } = req.query; 
 
     const query = {};
     if (emailId) {
-      query.allocatedVolunteer = emailId; 
+      query.allocatedVolunteer = emailId;  // Filter locations by allocated volunteer's email
     }
 
     const locations = await Location.find(query);
@@ -174,6 +207,12 @@ const getLocations = async (req, res) => {
   }
 };
 
+/**
+ * Book a future ride by saving the ride details in the database.
+ * 
+ * @param {Object} req - Request object with future ride data
+ * @param {Object} res - Response object confirming the booking
+ */
 const bookFutureRides = async (req, res) => {
   try {
     const { fromLocation, destination, date, time } = req.body;
@@ -184,6 +223,8 @@ const bookFutureRides = async (req, res) => {
     time,
   });
   const FutureAssist = new FutureAssistSchema({ fromLocation, destination, date, time });
+  
+  // Save the future booking
   await FutureAssist.save(); 
   res.status(201).json({ message: 'Booking confirmed' });
   } catch (error) {
@@ -191,6 +232,12 @@ const bookFutureRides = async (req, res) => {
   }
 };
 
+/**
+ * Fetch all future bookings.
+ * 
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object to send back future bookings
+ */
 const getFutureBookings = async (req, res) => {
   try {
     const futureBookings = await FutureAssistSchema.find();
@@ -203,7 +250,13 @@ const getFutureBookings = async (req, res) => {
   }
 };
 
-
+/**
+ * Find the nearest volunteer to the customer using H3 geospatial indexing.
+ * 
+ * @param {Number} custLatitude - Customer's latitude
+ * @param {Number} custLongitude - Customer's longitude
+ * @returns {Object|null} - Nearest volunteer object or null if not found
+ */
 const findNearestVolunteer = async (custLatitude, custLongitude) => {
   try {
     const customerH3Index = h3.latLngToCell(custLatitude, custLongitude, 9);
@@ -213,16 +266,19 @@ const findNearestVolunteer = async (custLatitude, custLongitude) => {
     let closestVolunteer = null;
     let minDistance = Infinity;
 
+    // Search volunteers in rings of increasing distance
     while (nearestVolunteers.length === 0 && ringSize <= 20) {
       const nearbyHexes = h3.gridDisk(customerH3Index, ringSize);
       console.log('Nearby hexagons:', nearbyHexes);
       console.log(`Searching with ring size: ${ringSize}`);
       nearestVolunteers = await Vas.find({
         h3Index: { $in: nearbyHexes },
-        availability: true 
+        availability: true // Filter only available volunteers
       });
       console.log(`Nearest volunteer: ${nearestVolunteers}`);
       let volunteerH3Index = null;
+
+      // Calculate distances to find the closest volunteer
       for (let volunteer of nearestVolunteers) {
         volunteerH3Index = h3.latLngToCell(volunteer.latitude, volunteer.longitude, 9);
         const h3Distance = h3.gridDistance(customerH3Index, volunteerH3Index);
@@ -243,17 +299,23 @@ const findNearestVolunteer = async (custLatitude, custLongitude) => {
   }
 };
 
+/**
+ * Confirm the booking status for a customer based on their email.
+ * 
+ * @param {Object} req - Request object with customer email
+ * @param {Object} res - Response object returning the latest booking
+ */
 const bookingConfirmation = async (req, res) => {
   try {
     const { customerEmailId } = req.params;
 
+    // Find the latest booking for the customer
     const booking = await Location.findOne({ customerEmailId }).sort({ createdAt: -1 });
 
     if (!booking) {
       return res.status(404).json({ message: 'No booking found for this customer.' });
     }
 
-    // Return the booking status
     res.json({ booking });
   } catch (error) {
     console.error('Error fetching booking status:', error);
@@ -261,6 +323,12 @@ const bookingConfirmation = async (req, res) => {
   }
 };
 
+/**
+ * Fetch volunteer location based on email ID.
+ * 
+ * @param {Object} req - Request object with volunteer email
+ * @param {Object} res - Response object returning volunteer's location
+ */
 const getVolunteerLocation = async (req, res) => {
   try {
     const { email } = req.params;
@@ -271,6 +339,8 @@ const getVolunteerLocation = async (req, res) => {
     if (!volunteer) {
       return res.status(404).json({ message: 'Volunteer not found' });
     }
+
+    // Return latitude and longitude of the volunteer
     res.json({
       lat: volunteer.latitude,  
       lng: volunteer.longitude,
@@ -281,10 +351,16 @@ const getVolunteerLocation = async (req, res) => {
   }
 };
 
+/**
+ * Update rating and feedback for a booking.
+ * 
+ * @param {Object} req - Request object containing bookingId and feedback details
+ * @param {Object} res - Response object confirming update
+ */
 const updateRatingFeedback = async (req, res) => {
   try {
-    const { bookingId } = req.params; // Get the booking ID from URL params
-    const { rating, feedback } = req.body; // Get the ratings and feedback from the request body
+    const { bookingId } = req.params; // Get the booking ID 
+    const { rating, feedback } = req.body; // Get the ratings and feedback 
 
     // Find the booking by its ID and update ratings and feedback
     const updatedBooking = await Location.findByIdAndUpdate(
@@ -304,5 +380,5 @@ const updateRatingFeedback = async (req, res) => {
   }
 };
 
-
+// Export all controller functions for use in other parts of the application
 module.exports = { customerSignUp, customerLogin, getUserDetails,updateUser, createLocation, getLocations, bookFutureRides, getFutureBookings, findNearestVolunteer, bookingConfirmation, getVolunteerLocation, updateRatingFeedback };

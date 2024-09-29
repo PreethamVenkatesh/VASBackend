@@ -46,7 +46,7 @@ const vasSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  h3Index: {
+  h3Index: { //  The H3 geospatial index representing the Volunteer's location
     type: String,
     default: '0' 
   },

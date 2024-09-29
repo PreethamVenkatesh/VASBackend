@@ -1,10 +1,9 @@
-// Importing bcryptjs for password hashing
-const bcrypt = require('bcryptjs'); 
+const bcrypt = require('bcryptjs'); // Importing bcryptjs for password hashing
 
 // Importing mongoose to define the schema for Customer MongoDB collection
 const mongoose = require('mongoose');
 
-// Defining the schema for the Customer collection
+// Defining the schema for the Customer details collection
 const custSchema = new mongoose.Schema({
   firstName: {
     type: String,
@@ -43,6 +42,9 @@ const custSchema = new mongoose.Schema({
     default: Date.now
   }
 });
+
+// Creating a model from the schema that represents the 'Customer' collection in MongoD
 const Customer = mongoose.model('Customer', custSchema)
 
+// Exporting the Customer model to be used in other places
 module.exports = Customer;
